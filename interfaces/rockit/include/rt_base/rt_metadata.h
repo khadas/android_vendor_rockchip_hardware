@@ -24,6 +24,7 @@
 #include "rt_type.h"  // NOLINT
 #include "rt_error.h" // NOLINT
 
+typedef RT_RET (*RTMetaValueFree)(void *);
 struct RTMetaDataContext;
 
 class RtMetaData {
@@ -52,7 +53,7 @@ class RtMetaData {
     virtual RT_BOOL setInt32(UINT32 key, INT32 value);
     virtual RT_BOOL setInt64(UINT32 key, INT64 value);
     virtual RT_BOOL setFloat(UINT32 key, float value);
-    virtual RT_BOOL setPointer(UINT32 key, RT_PTR value);
+    virtual RT_BOOL setPointer(UINT32 key, RT_PTR value, RTMetaValueFree freeFunc = RT_NULL);
 
     virtual RT_BOOL findCString(UINT32 key, const char **value) const;
     virtual RT_BOOL findInt32(UINT32 key, INT32 *value) const;
@@ -64,7 +65,7 @@ class RtMetaData {
     virtual RT_BOOL setInt32(const char* key, INT32 value);
     virtual RT_BOOL setInt64(const char* key, INT64 value);
     virtual RT_BOOL setFloat(const char* key, float value);
-    virtual RT_BOOL setPointer(const char* key, RT_PTR value);
+    virtual RT_BOOL setPointer(const char* key, RT_PTR value, RTMetaValueFree freeFunc = RT_NULL);
 
     virtual RT_BOOL findCString(const char* key, const char **value) const;
     virtual RT_BOOL findInt32(const char* key, INT32 *value) const;
@@ -72,12 +73,14 @@ class RtMetaData {
     virtual RT_BOOL findFloat(const char* key, float *value) const;
     virtual RT_BOOL findPointer(const char* key, RT_PTR *value) const;
 
-    virtual RT_BOOL setData(UINT64 key, UINT32 type, const void *data, UINT32 size);
+    virtual RT_BOOL setData(
+        UINT64 key, UINT32 type, const void *data, UINT32 size, RTMetaValueFree freeFunc = RT_NULL);
 
     virtual RT_BOOL findData(UINT64 key, UINT32 *type,
                   const void **data, UINT32 *size) const;
 
     virtual RT_BOOL hasData(UINT64 key) const;
+    virtual RT_BOOL isEmpty();
 
     virtual void dumpToLog() const;
 

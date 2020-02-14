@@ -13,6 +13,8 @@ cc_library_shared {
         "sideband/RTSidebandWindow.cpp",
         "sideband/DrmVopRender.cpp",
         "sideband/MessageThread.cpp",
+        "RTMetadataRetrieverCallback.cpp",
+        "RockitMetadataRetriever.cpp",
     ],
 
     shared_libs: [
@@ -30,6 +32,11 @@ cc_library_shared {
         "libdrm",
         "libbinder",
         "libhardware"
+    ],
+
+    static_libs: [
+        "libyuv_static",
+        "libstagefright_color_conversion",
     ],
 
     include_dirs: [

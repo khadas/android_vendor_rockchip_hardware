@@ -26,7 +26,7 @@ enum {
     kKeyFormatDuration   = MKTAG('f', 'd', 'u', 'r'),  // UINT64
     kKeyFormatEOS        = MKTAG('f', 'e', 'o', 's'),
     kKeyFormatUri        = MKTAG('f', 'u', 'r', 'i'),
-    kKeyUserAgent        = MKTAG('u', 's', 'a', 't'),
+    kKeyUriHeaders       = MKTAG('u', 'r', 'h', 'd'),
     kKeyProtocol         = MKTAG('p', 't', 'c', 'l'),
     kKeyTimeBaseNum      = MKTAG('t', 'i', 'b', 'n'),
     kKeyTimeBaseDen      = MKTAG('t', 'i', 'b', 'd'),
@@ -60,12 +60,6 @@ enum {
     kKeyVCodecBufferCount    = MKTAG('v', 'c', 'b', 'c'),  // INT32
     kKeyVCodecBufferSize     = MKTAG('v', 'c', 'b', 's'),  // INT32
 
-    /* video camera features*/
-    kKeyVCaptureBufType      = MKTAG('v', 'p', 'b', 't'),  // INT32
-    kKeyVCaptureUseLIBV4L2   = MKTAG('v', 'p', 'u', 'v'),  // INT32
-    kKeyVCaptureMemType      = MKTAG('v', 'p', 'm', 't'),  // INT32
-    kKeyVCaptureDevice       = MKTAG('v', 'p', 'r', 'd'),  // char
-
     /* video extra features*/
     kKeyVCodecGopSize        = MKTAG('g', 'p', 's', 'z'),  // INT32 encoder feature
     kKeyVCodecMaxBFrames     = MKTAG('m', 'b', 'f', 'm'),  // INT32 encoder feature
@@ -85,6 +79,7 @@ enum {
     kKeyACodecBitPerCodedSample = MKTAG('a', 'b', 'p', 'c'),
     kKeyAUseSoftVol             = MKTAG('a', 'u', 's', 'd'),
     kKeyAudioFormat             = MKTAG('a', 'f', 'm', 't'),
+    kkeyAudioAECTrans           = MKTAG('a', 'a', 't', 's'),
 
     /* subtitle track features */
     kKeySCodecLanguage      = MKTAG('s', 'l', 'a', 'n'),  // char*
@@ -104,6 +99,7 @@ enum {
     kKeyFrameError       = MKTAG('f', 'e', 'r', 'r'),   // INT32 Frame Error
     kKeyDisplayW         = MKTAG('d', 'w', 'i', 'd'),   // INT32
     kKeyDisplayH         = MKTAG('d', 'h', 'e', 'i'),   // INT32
+    kKeyFrameColorFormat = MKTAG('f', 'c', 'f', 'm'),   // INT32
 
     /* RTPacket */
     kKeyPacketPtr        = MKTAG('a', 'v', 'p', 't'),   // AVPacket
@@ -175,8 +171,37 @@ enum {
     /* setting command */
     kKeySettingQueryCmd        = MKTAG('s', 'q', 'u', 'y'),
 
+    /* meta data retriever*/
+    kRetrieverKey              = MKTAG('r', 'k', 'e', 'y'),
+    kRetrieverFrameAtTime      = MKTAG('r', 'f', 'a', 't'),
+    kRetrieverFrameOption      = MKTAG('r', 'f', 'f', 'o'),
+    kRetrieverDstColorFormat   = MKTAG('r', 'd', 'c', 'f'),
+    kRetrieverFrameMetaOnly    = MKTAG('r', 'f', 'm', 'o'),
+    kRetrieverFrameNumber      = MKTAG('r', 'f', 'n', 'u'),
+    kRetrieverReadMaxTime      = MKTAG('r', 'r', 'm', 't'),
+    kRetrieverAlbumArtData     = MKTAG('r', 'a', 'a', 'd'),
+    kRetrieverAlbumArtDataSize = MKTAG('r', 'a', 'a', 's'),
+    kRetrieverCallbackContext  = MKTAG('r', 'c', 'b', 'c'),
+    kRetrieverBufferAddress    = MKTAG('r', 'b', 'a', 'r'),
+
+    kRetrieverKeyMIMEType      = MKTAG('r', 'm', 'i', 't'),
+    kRetrieverKeyCDTrackNumber = MKTAG('r', 'c', 't', 'n'),
+    kRetrieverKeyDiscNumber    = MKTAG('r', 'd', 'i', 'n'),
+    kRetrieverKeyAlbum         = MKTAG('r', 'a', 'l', 'b'),
+    kRetrieverKeyArtist        = MKTAG('r', 'a', 'r', 't'),
+    kRetrieverKeyAlbumArtist   = MKTAG('r', 'a', 'a', 't'),
+    kRetrieverKeyAuthor        = MKTAG('r', 'a', 'u', 't'),
+    kRetrieverKeyComposer      = MKTAG('r', 'c', 'o', 'm'),
+    kRetrieverKeyDate          = MKTAG('r', 'd', 'a', 't'),
+    kRetrieverKeyGenre         = MKTAG('r', 'g', 'e', 'n'),
+    kRetrieverKeyTitle         = MKTAG('r', 't', 'i', 't'),
+    kRetrieverKeyYear          = MKTAG('r', 'y', 'e', 'r'),
+    kRetrieverKeyWriter        = MKTAG('r', 'w', 'r', 'i'),
+    kRetrieverKeyCompilation   = MKTAG('r', 'c', 'p', 'l'),
+    kRetrieverKeyLocation      = MKTAG('r', 'l', 'o', 'c'),
+    kRetrieverKeyDuration      = MKTAG('r', 'd', 'u', 'r'),
+
     /* for new pipeline */
-    kKeyOutputStreamType       = MKTAG('o', 'p', 's', 't'),    // INT32
     kKeyPipeInvokeCmd          = MKTAG('p', 'c', 'm', 'd'),    // const char *
     kKeyTaskNodeId             = MKTAG('t', 'n', 'i', 'd'),    // INT32
 };

@@ -26,12 +26,6 @@
 
 namespace android {
 
-#define ROCKIT_PLAYER_LIB_NAME          "/system/lib/librockit.so"
-#define CREATE_PLAYER_FUNC_NAME         "createRockitPlayer"
-#define DESTROY_PLAYER_FUNC_NAME        "destroyRockitPlayer"
-#define CREATE_METADATA_FUNC_NAME       "createRockitMetaData"
-#define DESTROY_METADATA_FUNC_NAME      "destroyRockitMetaData"
-
 /* must keep sync with rockit */
 typedef enum  _RTInvokeIds {
     RT_INVOKE_ID_GET_TRACK_INFO = 1,
@@ -42,48 +36,6 @@ typedef enum  _RTInvokeIds {
     RT_INVOKE_ID_SET_VIDEO_SCALING_MODE = 6,
     RT_INVOKE_ID_GET_SELECTED_TRACK = 7
 } RTInvokeIds;
-
-enum RTTrackType {
-    RTTRACK_TYPE_UNKNOWN = -1,  // < Usually treated as AVMEDIA_TYPE_DATA
-    RTTRACK_TYPE_VIDEO,
-    RTTRACK_TYPE_AUDIO,
-    RTTRACK_TYPE_DATA,          // < Opaque data information usually continuous
-    RTTRACK_TYPE_SUBTITLE,
-    RTTRACK_TYPE_ATTACHMENT,    // < Opaque data information usually sparse
-
-    RTTRACK_TYPE_MEDIA,         // this is not a really type of tracks
-                                // it means video,audio,subtitle
-
-    RTTRACK_TYPE_MAX
-};
-
-/* must keep sync with RTTrackInfor in rockit */
-typedef struct _RockitTrackInfo {
-    INT32  mCodecType;
-    INT32  mCodecID;
-    UINT32 mCodecOriginID;
-    INT32  mIdx;
-
-    /* video track features */
-    INT32  mWidth;
-    INT32  mHeight;
-    float  mFrameRate;
-
-    /* audio track features*/
-    INT64  mChannelLayout;
-    INT32  mChannels;
-    INT32  mSampleRate;
-
-    /* subtitle track features*/
-
-    /* language */
-    char   lang[16];
-    char   mine[16];
-
-    bool   mProbeDisabled;
-    /* use reserved first when extend this structure */
-    INT8   mReserved[64];
-} RockitTrackInfor;
 
 RockitPlayer::RockitPlayer()
               : mPlayerImpl(NULL),

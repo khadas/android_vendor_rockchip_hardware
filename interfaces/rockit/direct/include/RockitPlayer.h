@@ -21,14 +21,10 @@
 #include <media/MediaPlayerInterface.h>
 #include "rt_metadata.h"
 #include "RTMediaPlayerInterface.h"
+#include "RTLibDefine.h"
 
 namespace android {
 
-typedef void * createRockitPlayerFunc();
-typedef void   destroyRockitPlayerFunc(void **player);
-
-typedef void * createRockitMetaDataFunc();
-typedef void   destroyRockitMetaDataFunc(void **meta);
 
 enum RTInvokeId {
     RT_INVOKE_SET_PLAY_SPEED = 10000,
