@@ -25,9 +25,7 @@ typedef struct ARKNNHAL ARKNNHAL;
 // https://developer.android.com/ndk/reference/group/neural-networks
 // nn api function types
 typedef int (*ARKNN_client_create_fn)(ARKNNHAL **hal);
-typedef int (*ARKNN_find_devices_fn)(ARKNNHAL *hal, rknn_devices_id* pdevs);
 typedef int (*ARKNN_init_fn)(ARKNNHAL *hal, rknn_context *context, void *model, uint32_t size, uint32_t flag);
-typedef int (*ARKNN_init2_fn)(ARKNNHAL *hal, rknn_context* context, void *model, uint32_t size, uint32_t flag, rknn_init_extend* extend);
 typedef int (*ARKNN_destroy_fn)(ARKNNHAL *hal, rknn_context);
 typedef int (*ARKNN_query_fn)(ARKNNHAL *hal, rknn_context context, rknn_query_cmd cmd, void* info, uint32_t size);
 typedef int (*ARKNN_inputs_set_fn)(ARKNNHAL *hal, rknn_context context, uint32_t n_inputs, rknn_input inputs[]);

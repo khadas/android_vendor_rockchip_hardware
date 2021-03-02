@@ -1,7 +1,7 @@
 // FIXME: your file license if you have one
 
 #include "GetResultCallback.h"
-#include "rknn_api_bridge/utils.h"
+#include "utils.h"
 namespace rockchip::hardware::neuralnetworks::implementation {
 
 // Methods from ::rockchip::hardware::neuralnetworks::V1_0::IGetResultCallback follow.

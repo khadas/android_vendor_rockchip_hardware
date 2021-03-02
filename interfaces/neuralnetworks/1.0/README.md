@@ -11,9 +11,6 @@ https://source.android.com/devices/architecture/hidl
 - default/*.cpp, *.h
   使用命令生成：hidl-gen -o vendor/rockchip/hardware/interfaces/neuralnetworks/1.0/default -Lc++-impl -rrockchip.hardware:vendor/rockchip/hardware/interfaces -randroid.hidl:system/libhidl/transport rockchip.hardware.neuralnetworks@1.0
   生成后，具体接口的实现需要在这些源文件中添加。HIDL_FETCH这个是service的加载入口，需要自己添加。
-- java/*
-  使用命令生成：hidl-gen -o vendor/rockchip/hardware/interfaces/neuralnetworks/1.0/java -Ljava -rrockchip.hardware:vendor/rockchip/hardware/interfaces -randroid.hidl:system/libhidl/transport rockchip.hardware.neuralnetworks@1.0
-  不需要修改，用于提供接口给Client，基本是做参考，用不上。
 - default/service/*
   service的server注册服务，一般不需要修改，如果需要配置优先级等，可以自己修改。
 - default/sepolicy/*
@@ -23,10 +20,6 @@ https://source.android.com/devices/architecture/hidl
   详情: https://android.googlesource.com/platform/ndk/+/master/docs/PlatformApis.md
 - nnapi_implementation/*
   提供给App jni链接的静态库，能够调用system/lib/librknnhal_bridge.so中暴露出的接口。
-- RKNNHALApp/*
-  App demo，写得比较简单，编译jni前，需要把nnapi_implementation.a更新到jni目录(app/src/main/cpp/)中。
-- RKNNApiTestBin/*
-  Client binary demo，可以直接和client通信，主要用于测试HAL的C++ api。
 
 ### 修改接口流程
 建议把接口定义成 request/response的模式，这样修改接口时，只需要改request/response的结构定义即可，而不需要整套修改定义。
@@ -61,59 +54,11 @@ https://source.android.com/devices/architecture/hidl
 | SystemApp/Bin -- Client | ==> | RKNN HAL -- Server |
 |----------------------------------------------------|
 ```
-#### java api
-```
-|--------------------------------------------------------------------------------------------|
-| App | ==> | frameworks api | ==> | frameworks service -- Client | ==> | RKNN HAL -- Server |
-|--------------------------------------------------------------------------------------------|
-```
 #### c/c++ api (App直接作为HAL的Client)
 ```
-|------------------------------------------------------------------------------------------------------------------------------------|
-|-------------       Apk        -------------------------|---------------------------------  System  --------------------------------|
-|--------------------------------------------------------|---------------------------------------------------------------------------|
-| App | ==> | jni | == link ==> | nnapi_implementation.a | == dlopen ==> | librknnhal_bridge.so -- Client | ==> | RKNN HAL -- Server |
-|------------------------------------------------------------------------------------------------------------------------------------|
-```
-### TODO
-1. HAL(RKNeuralnetworks.cpp)
-- HAL中的prealloc问题，如果需要支持prealloc=false的接口，可以在librknnhal_bridge.so中修改实现；
-- HAL中rknnFindDevices需要再修改确认；
-- HAL中rknnInputsSet，在支持多个input时，需要再修改确认当前代码逻辑是否存在问题；
-- HAL中rknnOutputsGet，问题同上，并且需要确认第一条的prealloc问题，建议在rknnhal_bridge实现，HAL接口这里只考虑prealloc=true的情况；
-- HAL中rknnOutputsRelease，和prealloc挂钩，需要确认prealloc=true的情况下，是否还需要调用，如果不需要，则HAL中不需要考虑；
-2. rknnhal_bridge(RockchipNeuralnetworksBuilder.cpp)
-- rknn_find_devices接口未转换
-- rknn_init/init2考虑内存效率，当前memcpy拷贝模型数据可能比较慢，如果可以，建议直接从App端创建共享内存(Ashmem)，或者App端传路径下来直接加载到共享内存中。
-- rknn_inputs_set, 需要考虑多个input，检查当前是否存在问题；
-- rknn_outputs_get，同上，此外，这里考虑区分prealloc的情况；
-- rknn_outputs_release，当前未做实现；
-
-3. 直接从ISP驱动获取Camera预览数据，减少预览数据的多次拷贝
-目标流程：
-```
-|----------------------------------------------------|
-|            RKNN HAL               | <==> | ISP |
-|        add a callback             |
-|      //               \\          |
-| for rknn_run | for app to display |
-|     ||       |         ||         |
-|   output  | ==> |App(draw result) |
-|----------------------------------------------------|
-```
-
-当前流程：
-```
-----------------------------------------|
-|               Camera Service                       |
-|   getService //            \\ binder(fill data)    |
-|----------------------------------------------------|
-|         App         | <== Camera preview callback  |
-|          ||         |------------------------------|
-|          ||         | copy(fill data)              |
-| preview data(array) |  ======>  |  Ashmem(shared)  |
-|---------------------|-----------|------------------|
-|                     |                  ||          |
-|                     |           |    RKNN HAL      |
-|----------------------------------------------------|
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|-------------       Apk        -------------------------|---------------------------------  System  ---------------------------------|
+|--------------------------------------------------------|----------------------------------------------------------------------------|
+| App | ==> | jni | == link ==> | librknn_api.so | == dlopen ==> | librknnhal_bridge.rockchip.so -- Client | ==> | RKNN HAL -- Server |
+|-------------------------------------------------------------------------------------------------------------------------------------|
 ```

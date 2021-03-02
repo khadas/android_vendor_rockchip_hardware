@@ -20,9 +20,6 @@ extern "C" {
 
 #include <stdint.h>
 
-/* RKNN API Version */
-#define API_VERSION                             "1.3.3"
-
 /*
     Definition of extended flag for rknn_init.
 */
@@ -47,12 +44,6 @@ extern "C" {
    but it will reduce the frame rate. */
 #define RKNN_FLAG_COLLECT_PERF_MASK             0x00000008
 
-/* You can store the rknn model under NPU, 
- * when you call rknn_init(), you can pass the filename of model instead of model data.
- * Then you can hide your model and be invisible to the end user.
- * */
-#define RKNN_FLAG_LOAD_MODEL_IN_NPU				0x00000010
-
 /*
     Error code returned by the RKNN API.
 */
@@ -69,19 +60,22 @@ extern "C" {
 #define RKNN_ERR_DEVICE_UNMATCH                 -10     /* the device is unmatch, please update rknn sdk
                                                            and npu driver/firmware. */
 #define RKNN_ERR_INCOMPATILE_PRE_COMPILE_MODEL  -11     /* This RKNN model use pre_compile mode, but not compatible with current driver. */
+#define RKNN_ERR_INCOMPATILE_OPTIMIZATION_LEVEL_VERSION  -12     /* This RKNN model set optimization level, but not compatible with current driver. */
+#define RKNN_ERR_TARGET_PLATFORM_UNMATCH        -13     /* This RKNN model set target platform, but not compatible with current platform. */
+
 /*
     Definition for tensor
 */
 #define RKNN_MAX_DIMS                           16      /* maximum dimension of tensor. */
+#define RKNN_MAX_NUM_CHANNEL                    15      /* maximum channel number of input tensor. */
 #define RKNN_MAX_NAME_LEN                       256     /* maximum name lenth of tensor. */
 
-/*
-    Definition for deivce id
-*/
-#define RKNN_MAX_DEVS                           256     /* maximum number of device. */
-#define RKNN_MAX_DEV_LEN                        64      /* maximum id/type lenth of device. */
 
+#ifdef __arm__
+typedef uint32_t rknn_context;
+#else
 typedef uint64_t rknn_context;
+#endif
 
 
 /*
@@ -114,6 +108,18 @@ typedef enum _rknn_tensor_type {
     RKNN_TENSOR_TYPE_MAX
 } rknn_tensor_type;
 
+inline const char* get_type_string(rknn_tensor_type type)
+{
+    switch(type) {
+    case RKNN_TENSOR_FLOAT32: return "FP32";
+    case RKNN_TENSOR_FLOAT16: return "FP16";
+    case RKNN_TENSOR_INT8: return "INT8";
+    case RKNN_TENSOR_UINT8: return "UINT8";
+    case RKNN_TENSOR_INT16: return "INT16";
+    default: return "UNKNOW";
+    }
+}
+
 /*
     the quantitative type.
 */
@@ -125,6 +131,16 @@ typedef enum _rknn_tensor_qnt_type {
     RKNN_TENSOR_QNT_MAX
 } rknn_tensor_qnt_type;
 
+inline const char* get_qnt_type_string(rknn_tensor_qnt_type type)
+{
+    switch(type) {
+    case RKNN_TENSOR_QNT_NONE: return "NONE";
+    case RKNN_TENSOR_QNT_DFP: return "DFP";
+    case RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC: return "AFFINE";
+    default: return "UNKNOW";
+    }
+}
+
 /*
     the tensor data format.
 */
@@ -134,6 +150,15 @@ typedef enum _rknn_tensor_format {
 
     RKNN_TENSOR_FORMAT_MAX
 } rknn_tensor_format;
+
+inline const char* get_format_string(rknn_tensor_format fmt)
+{
+    switch(fmt) {
+    case RKNN_TENSOR_NCHW: return "NCHW";
+    case RKNN_TENSOR_NHWC: return "NHWC";
+    default: return "UNKNOW";
+    }
+}
 
 /*
     the information for RKNN_QUERY_IN_OUT_NUM.
@@ -189,15 +214,6 @@ typedef struct _rknn_sdk_version {
 } rknn_sdk_version;
 
 /*
-    the information for rknn_find_devices.
-*/
-typedef struct _rknn_devices_id {
-    uint32_t n_devices;                                 /* the number of devices. */
-    char types[RKNN_MAX_DEVS][RKNN_MAX_DEV_LEN];        /* the array of device type. */
-    char ids[RKNN_MAX_DEVS][RKNN_MAX_DEV_LEN];          /* the array of device ID. */
-} rknn_devices_id;
-
-/*
     the input information for rknn_input_set.
 */
 typedef struct _rknn_input {
@@ -232,14 +248,6 @@ typedef struct _rknn_output {
 } rknn_output;
 
 /*
-    the extend information for rknn_init.
-*/
-typedef struct _rknn_init_extend {
-    char* device_id;                                    /* input parameter, indicate which device selected. if only one
-                                                           device connected, can set nullptr. */
-} rknn_init_extend;
-
-/*
     the extend information for rknn_run.
 */
 typedef struct _rknn_run_extend {
@@ -261,7 +269,7 @@ typedef struct _rknn_output_extend {
 
     input:
         rknn_context* context       the pointer of context handle.
-        void* model                 pointer to the rknn model.
+        void* model                 if size > 0, pointer to the rknn model, if size = 0, filepath to the rknn model.
         uint32_t size               the size of rknn model.
         uint32_t flag               extend flag, see the define of RKNN_FLAG_XXX_XXX.
     return:
@@ -315,8 +323,6 @@ int rknn_inputs_set(rknn_context context, uint32_t n_inputs, rknn_input inputs[]
 /*  rknn_run
 
     run the model to execute inference.
-    this function does not block normally, but it blocks when more than 3 inferences
-    are not obtained by rknn_outputs_get.
 
     input:
         rknn_context context        the handle of context.

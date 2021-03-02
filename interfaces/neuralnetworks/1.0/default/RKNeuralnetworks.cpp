@@ -1,7 +1,7 @@
 // FIXME: your file license if you have one
 
 #include "RKNeuralnetworks.h"
-#include "rknn_api_bridge/utils.h"
+#include "utils.h"
 
 #ifndef IMPL_RKNN
 #define IMPL_RKNN 0
@@ -10,7 +10,7 @@
 #endif
 
 #if IMPL_RKNN
-#include "rknn_api_bridge/rknn_api.h"
+#include "prebuilts/librknnrt/include/rknn_api.h"
 #endif
 
 #include <android/hidl/memory/1.0/IMemory.h>
@@ -86,55 +86,6 @@ Return<void> RKNeuralnetworks::rknnInit(const ::rockchip::hardware::neuralnetwor
     ALOGI("%s: %s", __func__, (char *)pData);
 #endif
     _hidl_cb(toErrorStatus(ret), ctx);
-    return Void();
-}
-
-Return<void> RKNeuralnetworks::rknnInit2(const ::rockchip::hardware::neuralnetworks::V1_0::RKNNModel& model, uint32_t size, uint32_t flag, const ::rockchip::hardware::neuralnetworks::V1_0::RKNNInitExtend& extend, rknnInit2_cb _hidl_cb) {
-    RECORD_TAG();
-    sp<IMemory> pMem = mapMemory(model.modelData);
-    void *pData = pMem->getPointer();
-#if 0
-    rknn_init_extend _extend = {
-        .device_id = const_cast<char *>(extend.device_id.c_str()),
-    };
-    ret = rknn_init2(&ctx, pData, size, flag, &_extend);
-#else
-    ALOGI("%s: %s", __func__, (char *)pData);
-#endif
-    _hidl_cb(toErrorStatus(ret), ctx);
-    return Void();
-}
-
-Return<void> RKNeuralnetworks::rknnFindDevices(rknnFindDevices_cb _hidl_cb) {
-    RECORD_TAG();
-#if 0
-    rknn_devices_id *all_npu_devices = (rknn_devices_id *)malloc(sizeof(rknn_devices_id));
-    ret = rknn_find_devices(all_npu_devices);
-    if (ret) {
-        //_hidl_cb(toErrorStatus(ret), nullptr);
-        return Void();
-    }
-    uint32_t device_counts = all_npu_devices->n_devices;
-    hidl_array<hidl_string, 256> got_types;
-    hidl_array<hidl_string, 256> got_ids;
-    for (uint32_t i = 0; i < device_counts; i++) {
-        string type(all_npu_devices->types[i]);
-        string id(all_npu_devices->ids[i]);
-        got_types[i] = type;
-        got_ids[i] = id;
-    }
-
-    const ::rockchip::hardware::neuralnetworks::V1_0::RKNNDeviceID device_id = {
-        .n_devices = device_counts,
-        .types = got_types,
-        .ids = got_ids,
-    };
-
-    _hidl_cb(toErrorStatus(ret), device_id);
-    if (all_npu_devices) free(all_npu_devices);
-#else
-    //_hidl_cb(toErrorStatus(ret), nullptr);
-#endif
     return Void();
 }
 

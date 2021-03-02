@@ -22,8 +22,6 @@ using ::android::sp;
 struct RKNeuralnetworks : public V1_0::IRKNeuralnetworks {
     // Methods from ::rockchip::hardware::neuralnetworks::V1_0::IRKNeuralnetworks follow.
     Return<void> rknnInit(const ::rockchip::hardware::neuralnetworks::V1_0::RKNNModel& model, uint32_t size, uint32_t flag, rknnInit_cb _hidl_cb) override;
-    Return<void> rknnInit2(const ::rockchip::hardware::neuralnetworks::V1_0::RKNNModel& model, uint32_t size, uint32_t flag, const ::rockchip::hardware::neuralnetworks::V1_0::RKNNInitExtend& extend, rknnInit2_cb _hidl_cb) override;
-    Return<void> rknnFindDevices(rknnFindDevices_cb _hidl_cb) override;
     Return<::rockchip::hardware::neuralnetworks::V1_0::ErrorStatus> rknnDestory(uint64_t context) override;
     Return<::rockchip::hardware::neuralnetworks::V1_0::ErrorStatus> rknnQuery(uint64_t context, ::rockchip::hardware::neuralnetworks::V1_0::RKNNQueryCmd cmd, const hidl_memory& info, uint32_t size) override;
     Return<::rockchip::hardware::neuralnetworks::V1_0::ErrorStatus> rknnInputsSet(uint64_t context, const ::rockchip::hardware::neuralnetworks::V1_0::Request& request) override;
@@ -36,7 +34,11 @@ struct RKNeuralnetworks : public V1_0::IRKNeuralnetworks {
 private:
     LoadModelCallback _load_cb;
     GetResultCallback _get_cb;
+#ifdef __arm__
+    uint32_t ctx;
+#else
     uint64_t ctx;
+#endif
 };
 
 extern "C" V1_0::IRKNeuralnetworks* HIDL_FETCH_IRKNeuralnetworks(const char* name);

@@ -9,13 +9,6 @@ interface IRKNeuralnetworks {
     @callflow(next={"*"})
     rknnInit(RKNNModel model, uint32_t size, uint32_t flag) generates (ErrorStatus status, RKNNContext context);
 
-    @entry
-    @exit
-    @callflow(next={"*"})
-    rknnInit2(RKNNModel model, uint32_t size, uint32_t flag, RKNNInitExtend extend) generates (ErrorStatus status, RKNNContext context);
-
-    @callflow(next={"*"})
-    rknnFindDevices() generates (ErrorStatus status, RKNNDeviceID pdevs);
     @callflow(next={"*"})
     rknnDestory(RKNNContext context) generates (ErrorStatus status);
     @callflow(next={"*"})

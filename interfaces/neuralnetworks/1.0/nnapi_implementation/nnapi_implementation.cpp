@@ -1,4 +1,4 @@
-/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,9 +36,7 @@ struct NnApi {
   int32_t android_sdk_version;
 
   int (*ARKNN_client_create)(ARKNNHAL **hal);
-  int (*ARKNN_find_devices)(ARKNNHAL *hal, rknn_devices_id* pdevs);
   int (*ARKNN_init)(ARKNNHAL *hal, rknn_context *context, void *model, uint32_t size, uint32_t flag);
-  int (*ARKNN_init2)(ARKNNHAL *hal, rknn_context* context, void *model, uint32_t size, uint32_t flag, rknn_init_extend* extend);
   int (*ARKNN_destroy)(ARKNNHAL *hal, rknn_context);
   int (*ARKNN_query)(ARKNNHAL *hal, rknn_context context, rknn_query_cmd cmd, void* info, uint32_t size);
   int (*ARKNN_inputs_set)(ARKNNHAL *hal, rknn_context context, uint32_t n_inputs, rknn_input inputs[]);
@@ -128,9 +126,7 @@ static const NnApi LoadNnApi() {
 
   // API 27 (NN 1.0) methods.
   LOAD_FUNCTION(librknnhal_bridge, ARKNN_client_create);
-  LOAD_FUNCTION(librknnhal_bridge, ARKNN_find_devices);
   LOAD_FUNCTION(librknnhal_bridge, ARKNN_init);
-  LOAD_FUNCTION(librknnhal_bridge, ARKNN_init2);
   LOAD_FUNCTION(librknnhal_bridge, ARKNN_destroy);
   LOAD_FUNCTION(librknnhal_bridge, ARKNN_query);
   LOAD_FUNCTION(librknnhal_bridge, ARKNN_inputs_set);
@@ -174,18 +170,7 @@ typedef struct {
   rknn_context rknn_ctx;
 } _rknn_context;
 
-int rknn_find_devices(rknn_devices_id* pdevs) {
-  const NnApi *_nnapi = NnApiImplementation();
-  ARKNNHAL *_hal;
-  _nnapi->ARKNN_client_create(&_hal);
-  if (!_hal) {
-      NNAPI_LOG("Failed to create RKNN HAL Client!");
-      return RKNN_ERR_DEVICE_UNAVAILABLE;
-  }
-  return _nnapi->ARKNN_find_devices(_hal, pdevs);
-}
-
-int rknn_init2(rknn_context* context, void* model, uint32_t size, uint32_t flag, rknn_init_extend* extend) {
+int rknn_init(rknn_context* context, void* model, uint32_t size, uint32_t flag) {
   int ret;
   const NnApi *_nnapi = NnApiImplementation();
 
@@ -197,11 +182,7 @@ int rknn_init2(rknn_context* context, void* model, uint32_t size, uint32_t flag,
   }
 
   rknn_context _rknn_ctx;
-  if (extend != NULL) {
-    ret = _nnapi->ARKNN_init2(_hal, &_rknn_ctx, model, size, flag, extend);
-  } else {
-    ret = _nnapi->ARKNN_init(_hal, &_rknn_ctx, model, size, flag);
-  }
+  ret = _nnapi->ARKNN_init(_hal, &_rknn_ctx, model, size, flag);
 
   if (ret == RKNN_SUCC) {
     _rknn_context *_ctx = (_rknn_context *)malloc(sizeof(_rknn_context));
@@ -213,10 +194,6 @@ int rknn_init2(rknn_context* context, void* model, uint32_t size, uint32_t flag,
   return ret;
 }
 
-int rknn_init(rknn_context* context, void* model, uint32_t size, uint32_t flag) {
-  return rknn_init2(context, model, size, flag, NULL);
-}
-
 int rknn_destroy(rknn_context context) {
   _rknn_context *_ctx = (_rknn_context *)context;
   if (_ctx == NULL || _ctx->hal == NULL || _ctx->rknn_ctx == NULL) {
@@ -225,7 +202,9 @@ int rknn_destroy(rknn_context context) {
 
   const NnApi *_nnapi = NnApiImplementation();
 
-  return _nnapi->ARKNN_destroy(_ctx->hal, _ctx->rknn_ctx);
+  int ret =  _nnapi->ARKNN_destroy(_ctx->hal, _ctx->rknn_ctx);
+  free(_ctx);
+  return ret;
 }
 
 int rknn_query(rknn_context context, rknn_query_cmd cmd, void* info, uint32_t size) {

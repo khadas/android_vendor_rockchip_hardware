@@ -6,7 +6,7 @@
 #include <hidlmemory/mapping.h>
 
 #include <errno.h>
-#include "rknn_api_lite.h"
+#include "../default/prebuilts/librknnrt/include/rknn_api.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -53,22 +53,9 @@ int ARKNN_client_create(ARKNNHAL **hal) {
     return 0;
 }
 
-int ARKNN_find_devices(ARKNNHAL *hal, rknn_devices_id* pdevs) {
-    CHECK_AND_GET_CLIENT();
-    int ret = client->rknn_find_devices(pdevs);
-    return 0;
-}
-
 int ARKNN_init(ARKNNHAL *hal, rknn_context* context, void *model, uint32_t size, uint32_t flag) {
     CHECK_AND_GET_CLIENT();
     int ret = client->rknn_init(context, model, size, flag);
-    return ret;
-}
-
-int ARKNN_init2(ARKNNHAL *hal, rknn_context* context, void *model, uint32_t size, uint32_t flag, rknn_init_extend* extend) {
-    CHECK_AND_GET_CLIENT();
-    int ret = client->rknn_init2(context, model, size, flag, extend);
-    // TODO
     return ret;
 }
 
