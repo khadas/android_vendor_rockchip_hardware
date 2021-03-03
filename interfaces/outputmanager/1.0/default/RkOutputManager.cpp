@@ -76,6 +76,26 @@ Return<Result> RkOutputManager::setGamma(Display display, uint32_t size, const h
     return res;
 }
 
+Return<Result> RkOutputManager::set3DLut(Display display, uint32_t size, const hidl_vec<uint16_t>& r, const hidl_vec<uint16_t>& g, const hidl_vec<uint16_t>& b)
+{
+    uint16_t red[size];
+    uint16_t green[size];
+    uint16_t blue[size];
+    Result res = Result::UNKNOWN;
+    int ret = 0;
+
+    for (uint32_t i=0;i<size;i++){
+        red[i] = r[i];
+        green[i] = g[i];
+        blue[i] = b[i];
+    }
+
+    ret = mHwOutput->set3DLut(mHwOutput, display, size, red, green, blue);
+    if (ret == 0)
+        res = Result::OK;
+    return res;
+}
+
 Return<Result> RkOutputManager::setBrightness(Display display, uint32_t value)
 {
     mHwOutput->setBrightness(mHwOutput, display, value);

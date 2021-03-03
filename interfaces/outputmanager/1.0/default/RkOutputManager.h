@@ -70,6 +70,7 @@ struct RkOutputManager : public IRkOutputManager {
     Return<void> saveConfig() override;
     Return<void> hotPlug() override;
     Return<Result> set3DMode(const hidl_string& mode)  override;
+    Return<Result> set3DLut(Display display, uint32_t size, const hidl_vec<uint16_t>& r, const hidl_vec<uint16_t>& g, const hidl_vec<uint16_t>& b) override;
 private:
     hw_output_device* mHwOutput;
 };

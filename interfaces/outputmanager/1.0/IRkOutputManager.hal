@@ -103,5 +103,8 @@ interface IRkOutputManager{
 
     @callflow(next={"*"})
     set3DMode( string mode) generates (Result error);
+
+    @callflow(next={"*"})
+    set3DLut(Display display, uint32_t size, vec<uint16_t> r, vec<uint16_t> g, vec<uint16_t> b) generates (Result error);
 };
 
