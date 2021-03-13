@@ -155,7 +155,7 @@ int RTMetadataRetrieverCallback::init(RtMetaData* meta) {
         ALOGD("%s not find height in meta", __FUNCTION__);
     }
 
-    if (!meta->findInt32(kKeyFrameColorFormat, &format)) {
+    if (!meta->findInt32(kKeyCodecFormat, &format)) {
         format = RT_FMT_YUV420SP;
         ALOGD("%s not find src format in meta, use NV12 for default", __FUNCTION__);
     }
