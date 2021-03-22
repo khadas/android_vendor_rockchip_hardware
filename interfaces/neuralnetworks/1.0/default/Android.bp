@@ -27,6 +27,7 @@ cc_library_shared {
         "rockchip.hardware.neuralnetworks@1.0",
         "android.hidl.memory@1.0",
         "librknnrt",
+        "rockchip.hardware.neuralnetworks@1.0-adapter-helper",
     ],
     cflags: ["-DIMPL_RKNN"],
 }
