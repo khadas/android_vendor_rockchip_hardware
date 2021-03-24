@@ -24,7 +24,7 @@ static bool g_debug_pro = 0;
 
 class _RKNNContext {
 public:
-    rknn_context context = 0;
+    uint64_t context = 0;
     rknn_input_output_num io_num;
     rknn_tensor_attr *input_tensor_attrs = nullptr;
     rknn_tensor_attr *output_tensor_attrs = nullptr;
