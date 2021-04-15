@@ -186,7 +186,7 @@ INT32 ion_map(INT32 fd, UINT32 length, INT32 prot, INT32 flags, off_t offset, vo
     return 0;
 }
 
-RTSurfaceCallback::RTSurfaceCallback(const sp<ANativeWindow> &nativeWindow)
+RTSurfaceCallback::RTSurfaceCallback(const sp<IGraphicBufferProducer> &bufferProducer)
     : mDrmFd(-1),
       mTunnel(0),
       mSidebandHandle(NULL),
@@ -194,7 +194,7 @@ RTSurfaceCallback::RTSurfaceCallback(const sp<ANativeWindow> &nativeWindow)
     if (mDrmFd < 0) {
         mDrmFd = drm_open();
     }
-    mNativeWindow = nativeWindow;
+    mNativeWindow = new Surface(bufferProducer, true);
 }
 
 RTSurfaceCallback::~RTSurfaceCallback() {
@@ -210,17 +210,39 @@ RTSurfaceCallback::~RTSurfaceCallback() {
         drm_close(mDrmFd);
         mDrmFd = -1;
     }
+
+    if (mNativeWindow.get() != NULL) {
+        mNativeWindow.clear();
+    }
+}
+
+INT32 RTSurfaceCallback::setNativeWindow(const sp<IGraphicBufferProducer> &bufferProducer) {
+    if (bufferProducer.get() == NULL)
+        return 0;
+
+    if(getNativeWindow() == NULL) {
+        mNativeWindow = new Surface(bufferProducer, true);
+    } else {
+        ALOGD("already set native window");
+    }
+    return 0;
 }
 
 INT32 RTSurfaceCallback::connect(INT32 mode) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
     (void)mode;
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_api_connect(mNativeWindow.get(), NATIVE_WINDOW_API_MEDIA);
 }
 
 INT32 RTSurfaceCallback::disconnect(INT32 mode) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
     (void)mode;
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_api_disconnect(mNativeWindow.get(), NATIVE_WINDOW_API_MEDIA);;
 }
 
@@ -234,6 +256,9 @@ INT32 RTSurfaceCallback::allocateBuffer(RTNativeWindowBufferInfo *info) {
     if (mTunnel) {
         mSidebandWindow->allocateBuffer((buffer_handle_t *)&bufferHandle);
     } else {
+        if (getNativeWindow() == NULL)
+            return -1;
+
         ret = native_window_dequeue_buffer_and_wait(mNativeWindow.get(), &buf);
         bufferHandle = buf->handle;
     }
@@ -272,6 +297,9 @@ INT32 RTSurfaceCallback::freeBuffer(void *buf, INT32 fence) {
     if (mTunnel) {
         ret = mSidebandWindow->freeBuffer((buffer_handle_t *)&buf);
     } else {
+        if (getNativeWindow() == NULL)
+            return -1;
+
         ret = mNativeWindow->cancelBuffer(mNativeWindow.get(), (ANativeWindowBuffer *)buf, fence);
     }
 
@@ -284,6 +312,9 @@ INT32 RTSurfaceCallback::remainBuffer(void *buf, INT32 fence) {
     if (mTunnel) {
         ret = mSidebandWindow->remainBuffer((buffer_handle_t)buf);
     } else {
+        if (getNativeWindow() == NULL)
+            return -1;
+
         ret = mNativeWindow->cancelBuffer(mNativeWindow.get(), (ANativeWindowBuffer *)buf, fence);
     }
 
@@ -296,6 +327,9 @@ INT32 RTSurfaceCallback::queueBuffer(void *buf, INT32 fence) {
     if (mTunnel) {
         ret = mSidebandWindow->queueBuffer((buffer_handle_t)buf);
     } else {
+        if (getNativeWindow() == NULL)
+            return -1;
+
         ret = mNativeWindow->queueBuffer(mNativeWindow.get(), (ANativeWindowBuffer *)buf, fence);
     }
     return ret;
@@ -319,6 +353,9 @@ INT32 RTSurfaceCallback::dequeueBufferAndWait(RTNativeWindowBufferInfo *info) {
     if (mTunnel) {
         mSidebandWindow->dequeueBuffer((buffer_handle_t *)&bufferHandle);
     } else {
+        if (getNativeWindow() == NULL)
+            return -1;
+
         ret = native_window_dequeue_buffer_and_wait(mNativeWindow.get(), &buf);
         if (buf) {
             bufferHandle = buf->handle;
@@ -419,26 +456,42 @@ INT32 RTSurfaceCallback::setCrop(
         if (mTunnel) {
             mSidebandWindow->setCrop(left, top, right, bottom);
         }
+
+        if (getNativeWindow() == NULL)
+            return -1;
+
         return native_window_set_crop(mNativeWindow.get(), &crop);
 }
 
 INT32 RTSurfaceCallback::setUsage(INT32 usage) {
     ALOGV("%s %d in usage=0x%x", __FUNCTION__, __LINE__, usage);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_usage(mNativeWindow.get(), usage);;
 }
 
 INT32 RTSurfaceCallback::setScalingMode(INT32 mode) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_scaling_mode(mNativeWindow.get(), mode);;
 }
 
 INT32 RTSurfaceCallback::setDataSpace(INT32 dataSpace) {
     ALOGV("%s %d in dataSpace=0x%x", __FUNCTION__, __LINE__, dataSpace);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_buffers_data_space(mNativeWindow.get(), (android_dataspace_t)dataSpace);
 }
 
 INT32 RTSurfaceCallback::setTransform(INT32 transform) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_buffers_transform(mNativeWindow.get(), transform);
 }
 
@@ -450,6 +503,9 @@ INT32 RTSurfaceCallback::setSwapInterval(INT32 interval) {
 
 INT32 RTSurfaceCallback::setBufferCount(INT32 bufferCount) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_buffer_count(mNativeWindow.get(), bufferCount);
 }
 
@@ -458,6 +514,9 @@ INT32 RTSurfaceCallback::setBufferGeometry(
         INT32 height,
         INT32 format) {
     ALOGV("%s %d in width=%d, height=%d, format=0x%x", __FUNCTION__, __LINE__, width, height, format);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     native_window_set_buffers_dimensions(mNativeWindow.get(), width, height);
     native_window_set_buffers_format(mNativeWindow.get(), format);
     if (mTunnel) {
@@ -481,11 +540,18 @@ INT32 RTSurfaceCallback::setSidebandStream(RTSidebandInfo info) {
     }
     mSidebandHandle = buffer;
     mTunnel = 1;
+
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return native_window_set_sideband_stream(mNativeWindow.get(), (native_handle_t *)buffer);
 }
 
 INT32 RTSurfaceCallback::query(INT32 cmd, INT32 *param) {
     ALOGV("%s %d in", __FUNCTION__, __LINE__);
+    if (getNativeWindow() == NULL)
+        return -1;
+
     return mNativeWindow->query(mNativeWindow.get(), cmd, param);
 
 }

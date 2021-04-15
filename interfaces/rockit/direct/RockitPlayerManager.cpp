@@ -42,7 +42,6 @@ typedef struct ROCKIT_PLAYER_CTX {
      sp<RockitPlayer>               mPlayer;
      sp<MediaPlayerBase::AudioSink> mAudioSink;
      RTAudioSinkCallback           *mAudioSinkCB;
-     sp<ANativeWindow>              mNativeWindow;
      RTSurfaceCallback             *mVideoSinkCB;
      RTMsgCallback                 *mMsgCallback;
      RTSubteSink                   *mSubteSink;
@@ -127,20 +126,15 @@ status_t RockitPlayerManager::setDataSource(const sp<IStreamSource> &source) {
 
 status_t RockitPlayerManager::setVideoSurfaceTexture(
         const sp<IGraphicBufferProducer> &bufferProducer) {
-    sp<ANativeWindow> window = NULL;
-    RTSurfaceCallback *surfaceCB = mCtx->mVideoSinkCB;
-    if (surfaceCB != NULL) {
-        delete surfaceCB;
-        surfaceCB = NULL;
+    status_t ret = OK;
+    if (mCtx->mVideoSinkCB == NULL) {
+        mCtx->mVideoSinkCB = new RTSurfaceCallback(bufferProducer);
+        ret = (status_t)mCtx->mPlayer->setVideoSink(static_cast<const void *>(mCtx->mVideoSinkCB));
+    } else{
+        ret = mCtx->mVideoSinkCB->setNativeWindow(bufferProducer);
     }
-    if (bufferProducer.get() != NULL) {
-        window = new Surface(bufferProducer, true);
-        surfaceCB = new RTSurfaceCallback(window);
-    }
-    ALOGV("setVideoSurfaceTexture window: %p bufferProducer: %p", window.get(), bufferProducer.get());
-    mCtx->mNativeWindow = window;
-    mCtx->mVideoSinkCB = surfaceCB;
-    return (status_t)mCtx->mPlayer->setVideoSink(static_cast<const void *>(surfaceCB));
+
+    return ret;
 }
 
 status_t RockitPlayerManager::prepare() {

@@ -32,7 +32,7 @@ class RockitPlayer;
 class RTSidebandWindow;
 class RTSurfaceCallback : public RTSurfaceInterface {
  public:
-    RTSurfaceCallback(const sp<ANativeWindow> &nativeWindow);
+    RTSurfaceCallback(const sp<IGraphicBufferProducer> &bufferProducer);
     virtual ~RTSurfaceCallback();
 
     virtual INT32 connect(INT32 mode);
@@ -59,6 +59,7 @@ class RTSurfaceCallback : public RTSurfaceInterface {
 
     virtual INT32 query(INT32 cmd, INT32 *param);
     virtual void* getNativeWindow();
+    virtual INT32 setNativeWindow(const sp<IGraphicBufferProducer> &bufferProducer);
 
  private:
     INT32                   mDrmFd;
