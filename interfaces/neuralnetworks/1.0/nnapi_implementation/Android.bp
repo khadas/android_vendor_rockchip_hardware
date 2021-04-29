@@ -1,5 +1,5 @@
 cc_library_shared {
-    name: "librknn_api",
+    name: "librknn_api_android",
     compile_multilib: "both",
     srcs: [
         "nnapi_implementation.cpp",

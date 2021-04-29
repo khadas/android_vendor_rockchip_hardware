@@ -81,7 +81,7 @@ Return<void> RKNeuralnetworks::rknnInit(const ::rockchip::hardware::neuralnetwor
     void *pData = pMem->getPointer();
     ALOGI("%s: %s", __func__, (char *)pData);
 #if IMPL_RKNN
-    ret = rknn_init(&ctx, pData, size, flag);
+    ret = rknn_init(&ctx, pData, size, flag, nullptr);
 #else
     ALOGI("%s: %s", __func__, (char *)pData);
 #endif

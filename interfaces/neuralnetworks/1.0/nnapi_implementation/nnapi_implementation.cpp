@@ -170,7 +170,7 @@ typedef struct {
   rknn_context rknn_ctx;
 } _rknn_context;
 
-int rknn_init(rknn_context* context, void* model, uint32_t size, uint32_t flag) {
+int rknn_init(rknn_context* context, void* model, uint32_t size, uint32_t flag, rknn_init_extend* extend) {
   int ret;
   const NnApi *_nnapi = NnApiImplementation();
 
@@ -260,4 +260,49 @@ int rknn_outputs_release(rknn_context context, uint32_t n_ouputs, rknn_output ou
   const NnApi *_nnapi = NnApiImplementation();
 
   return _nnapi->ARKNN_outputs_release(_ctx->hal, _ctx->rknn_ctx, n_ouputs, outputs);
+}
+
+int rknn_wait(rknn_context context, rknn_run_extend* extend) {
+  NNAPI_LOG("No Implement rknn_wait on Android HIDL RKNN API!");
+  return RKNN_ERR_FAIL;
+}
+
+rknn_tensor_mem* rknn_create_mem_from_phys(rknn_context ctx, uint64_t phys_addr, void *virt_addr, uint32_t size) {
+  NNAPI_LOG("No Implement rknn_create_mem_from_phys on Android HIDL RKNN API!");
+  return nullptr;
+}
+
+rknn_tensor_mem* rknn_create_mem_from_fd(rknn_context ctx, int32_t fd, void *virt_addr, uint32_t size, int32_t offset) {
+  NNAPI_LOG("No Implement rknn_create_mem_from_fd on Android HIDL RKNN API!");
+  return nullptr;
+}
+
+rknn_tensor_mem* rknn_create_mem_from_mb_blk(rknn_context ctx, void *mb_blk, int32_t offset) {
+  NNAPI_LOG("No Implement rknn_create_mem_from_mb_blk on Android HIDL RKNN API!");
+  return nullptr;
+}
+
+rknn_tensor_mem* rknn_create_mem(rknn_context ctx, uint32_t size) {
+  NNAPI_LOG("No Implement rknn_create_mem on Android HIDL RKNN API!");
+  return nullptr;
+}
+
+int rknn_destory_mem(rknn_context ctx, rknn_tensor_mem *mem) {
+  NNAPI_LOG("No Implement rknn_destory_mem on Android HIDL RKNN API!");
+  return RKNN_ERR_FAIL;
+}
+
+int rknn_set_weight_mem(rknn_context ctx, rknn_tensor_mem *mem) {
+  NNAPI_LOG("No Implement rknn_set_weight_mem on Android HIDL RKNN API!");
+  return RKNN_ERR_FAIL;
+}
+
+int rknn_set_internal_mem(rknn_context ctx, rknn_tensor_mem *mem) {
+  NNAPI_LOG("No Implement rknn_set_internal_mem on Android HIDL RKNN API!");
+  return RKNN_ERR_FAIL;
+}
+
+int rknn_set_io_mem(rknn_context ctx, rknn_tensor_mem *mem, rknn_tensor_attr *attr) {
+  NNAPI_LOG("No Implement rknn_set_io_mem on Android HIDL RKNN API!");
+  return RKNN_ERR_FAIL;
 }
