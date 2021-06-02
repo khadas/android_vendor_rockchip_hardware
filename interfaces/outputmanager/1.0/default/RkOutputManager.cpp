@@ -309,6 +309,40 @@ Return<void> RkOutputManager::getDisplayModes(Display display, getDisplayModes_c
     return Void();
 }
 
+Return<void> RkOutputManager::getConnectorInfo(getConnectorInfo_cb _hidl_cb)
+{
+    connector_info_t* mInfo = NULL;
+    uint32_t size=0;
+    mInfo = mHwOutput->getConnectorInfo(mHwOutput, &size);
+    Result res = Result::UNKNOWN;
+    hidl_vec<RkConnectorInfo> mRkConnectorInfo;
+
+    if (mInfo != NULL) {
+        res = Result::OK;
+        mRkConnectorInfo.resize((size_t)size);
+        for (uint32_t i=0;i<size;i++) {
+            mRkConnectorInfo[i].type = mInfo[i].type;
+            mRkConnectorInfo[i].id = mInfo[i].id;
+            mRkConnectorInfo[i].state = mInfo[i].state;
+        }
+    }
+
+    _hidl_cb(res, mRkConnectorInfo);
+    if (mInfo)
+        free(mInfo);
+    return Void();
+}
+
+Return<Result> RkOutputManager::updateDispHeader()
+{
+    Result res = Result::UNKNOWN;
+    int ret = mHwOutput->updateDispHeader(mHwOutput);
+    if(ret == 0){
+        res = Result::OK;
+    }
+    return res;
+}
+
 Return<void> RkOutputManager::saveConfig()
 {
     mHwOutput->saveConfig(mHwOutput);

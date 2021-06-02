@@ -106,5 +106,12 @@ interface IRkOutputManager{
 
     @callflow(next={"*"})
     set3DLut(Display display, uint32_t size, vec<uint16_t> r, vec<uint16_t> g, vec<uint16_t> b) generates (Result error);
+
+    @callflow(next={"*"})
+    getConnectorInfo() generates (Result error, vec<RkConnectorInfo> infos);
+
+    @callflow(next={"*"})
+    updateDispHeader() generates (Result error);
+
 };
 

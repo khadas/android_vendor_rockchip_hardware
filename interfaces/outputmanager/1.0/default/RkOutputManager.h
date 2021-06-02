@@ -71,6 +71,8 @@ struct RkOutputManager : public IRkOutputManager {
     Return<void> hotPlug() override;
     Return<Result> set3DMode(const hidl_string& mode)  override;
     Return<Result> set3DLut(Display display, uint32_t size, const hidl_vec<uint16_t>& r, const hidl_vec<uint16_t>& g, const hidl_vec<uint16_t>& b) override;
+    Return<void> getConnectorInfo(getConnectorInfo_cb _hidl_cb) override;
+    Return<Result> updateDispHeader() override;
 private:
     hw_output_device* mHwOutput;
 };
