@@ -1,0 +1,12 @@
+package rockchip.hardware.hdmi@1.0;
+
+import IHdmiCallback;
+
+interface IHdmi
+{
+	onStatusChange(uint32_t status);
+
+	registerListener(IHdmiCallback cb);
+
+	unregisterListener(IHdmiCallback cb);
+};
