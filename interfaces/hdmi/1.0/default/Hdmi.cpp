@@ -7,6 +7,19 @@ namespace rockchip::hardware::hdmi::implementation {
 
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback> mCb = nullptr;
 
+hidl_string mDeviceId;
+
+Return<void> Hdmi::foundHdmiDevice(const hidl_string& deviceId) {
+
+    ALOGE("@%s,deviceId:%s",__FUNCTION__,deviceId.c_str());
+    mDeviceId = deviceId.c_str();
+    return Void();
+}
+Return<void> Hdmi::getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) {
+    ALOGE("@%s,mDeviceId：%s",__FUNCTION__,mDeviceId.c_str());
+    _hidl_cb(mDeviceId);
+    return Void();
+}
 // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
 Return<void> Hdmi::onStatusChange(uint32_t status) {
     ALOGE("@%s",__FUNCTION__);

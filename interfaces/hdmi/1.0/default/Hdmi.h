@@ -18,6 +18,8 @@ using ::android::sp;
 
 struct Hdmi : public V1_0::IHdmi {
     // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
+    Return<void> foundHdmiDevice(const hidl_string& deviceId) override;
+    Return<void> getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) override;
     Return<void> onStatusChange(uint32_t status) override;
     Return<void> registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
     Return<void> unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
