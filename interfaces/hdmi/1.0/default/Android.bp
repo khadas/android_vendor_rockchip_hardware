@@ -18,6 +18,7 @@ cc_library_shared {
     srcs: [
         "Hdmi.cpp",
         "HdmiCallback.cpp",
+        "DeviceV4L2Event.cpp",
     ],
     shared_libs: [
         "libhidlbase",

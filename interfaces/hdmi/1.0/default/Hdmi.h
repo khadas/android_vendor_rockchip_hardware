@@ -6,6 +6,8 @@
 #include <hidl/MQDescriptor.h>
 #include <hidl/Status.h>
 
+#include "DeviceV4L2Event.h"
+
 namespace rockchip::hardware::hdmi::implementation {
 
 using ::android::hardware::hidl_array;
@@ -17,12 +19,17 @@ using ::android::hardware::Void;
 using ::android::sp;
 
 struct Hdmi : public V1_0::IHdmi {
+    public:
+     Hdmi();
+     ~Hdmi();
     // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
     Return<void> foundHdmiDevice(const hidl_string& deviceId) override;
     Return<void> getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) override;
     Return<void> onStatusChange(uint32_t status) override;
     Return<void> registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
     Return<void> unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
+
+    static V4L2EventCallBack eventCallback(void* sender,int event_type,struct v4l2_event *event);
 };
 
  extern "C" V1_0::IHdmi* HIDL_FETCH_IHdmi(const char* name);
