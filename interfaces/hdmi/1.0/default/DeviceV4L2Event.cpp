@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021 Rockchip Electronics Co., Ltd
  */
-#define LOG_TAG "mipi hdmi@"
+#define LOG_TAG "hdmi@1.0"
 
 #include <cutils/log.h>
 #include <sys/stat.h>
@@ -32,7 +32,7 @@ int V4L2DeviceEvent::initialize(int fd){
     subscribeEvent(V4L2_EVENT_CTRL);
     mV4L2EventThread = new V4L2EventThread(mFd,callback_);
     mV4L2EventThread->v4l2pipe();
-    mV4L2EventThread->run("Tvinput_Ev", android::PRIORITY_DISPLAY);
+    mV4L2EventThread->run("hdmi@1.0_event", android::PRIORITY_DISPLAY);
     return 0;
 }
 void V4L2DeviceEvent::closeEventThread() {
@@ -224,6 +224,28 @@ status_t V4L2DeviceEvent::queryControl(v4l2_queryctrl &control)
             control.id,  strerror(errno));
     return UNKNOWN_ERROR;
 }
+
+sp<V4L2DeviceEvent::FormartSize> V4L2DeviceEvent::queryFormat()
+{
+    struct v4l2_subdev_format aFormat;
+    int ret = ioctl(mFd, VIDIOC_SUBDEV_G_FMT, &aFormat);
+    ALOGD("@%s,mFd:%d",__FUNCTION__,mFd);
+    if (ret < 0) {
+        ALOGE("VIDIOC_SUBDEV_G_FMT failed: %s", strerror(errno));
+        return nullptr;
+    }
+    ALOGD("VIDIOC_SUBDEV_G_FMT: pad: %d, which: %d, width: %d, "
+    "height: %d, format: 0x%x, field: %d, color space: %d",
+    aFormat.pad,
+    aFormat.which,
+    aFormat.format.width,
+    aFormat.format.height,
+    aFormat.format.code,
+    aFormat.format.field,
+    aFormat.format.colorspace);
+    mCurformat = new V4L2DeviceEvent::FormartSize(aFormat.format.width,aFormat.format.height,1);
+    return mCurformat;
+}
 V4L2DeviceEvent::V4L2EventThread::V4L2EventThread(int fd,V4L2EventCallBack callback){
      mVideoFd = fd;
      mCallback_ = callback;
@@ -285,7 +307,7 @@ bool V4L2DeviceEvent::V4L2EventThread::threadLoop() {
                     ALOGE("VIDIOC_SUBDEV_G_FMT failed: %s", strerror(errno));
                     return true;
                 }
-                ALOGE("VIDIOC_SUBDEV_G_FMT: pad: %d, which: %d, width: %d, "
+                ALOGD("VIDIOC_SUBDEV_G_FMT: pad: %d, which: %d, width: %d, "
                 "height: %d, format: 0x%x, field: %d, color space: %d",
                 aFormat.pad,
                 aFormat.which,

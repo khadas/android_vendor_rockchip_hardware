@@ -1,10 +1,7 @@
 package rockchip.hardware.hdmi@1.0;
-
-
-
 struct HdmiStatus {
-
-uint64_t status;
-
-
+    uint64_t status;
+    uint64_t width;
+    uint64_t height;
+    double fps;
 };
