@@ -23,8 +23,10 @@ struct Hdmi : public V1_0::IHdmi {
      Hdmi();
      ~Hdmi();
     // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
-    Return<void> foundHdmiDevice(const hidl_string& deviceId) override;
+    Return<void> foundHdmiDevice(const hidl_string& deviceId, const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback>& cb) override;
     Return<void> getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) override;
+    Return<void> getMipiStatus(getMipiStatus_cb _hidl_cb) override;
+    Return<void> getHdmiRxStatus(getHdmiRxStatus_cb _hidl_cb) override;
     Return<void> onStatusChange(uint32_t status) override;
     Return<void> registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
     Return<void> unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;

@@ -8,6 +8,7 @@ hidl_interface {
         "types.hal",
         "IHdmi.hal",
         "IHdmiCallback.hal",
+        "IHdmiRxStatusCallback.hal",
     ],
     interfaces: [
         "android.hidl.base@1.0",

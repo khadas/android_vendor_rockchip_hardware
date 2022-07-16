@@ -5,7 +5,7 @@
 #include <sys/inotify.h>
 #include <errno.h>
 #include <linux/videodev2.h>
-
+#include <math.h>
 #include "HdmiCallback.h"
 
 
@@ -17,6 +17,7 @@
 namespace rockchip::hardware::hdmi::implementation {
 
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback> mCb = nullptr;
+sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback> mStatusCb = nullptr;
 
 hidl_string mDeviceId;
 
@@ -51,7 +52,6 @@ int findMipiHdmi()
                 ALOGE("[%s %d] open device failed:%x [%s]", __FUNCTION__, __LINE__, videofd,strerror(errno));
                 continue;
             } else {
-                // ALOGE("%s open device %s successful.", __FUNCTION__, kV4l2DevicePath);
                 uint32_t ishdmi;
                 ret = ::ioctl(videofd, RKMODULE_GET_HDMI_MODE, (void*)&ishdmi);
                 if (ret < 0) {
@@ -59,22 +59,15 @@ int findMipiHdmi()
                     close(videofd);
                     continue;
                 }
-                ALOGE("%s RKMODULE_GET_HDMI_MODE:%d",kV4l2DevicePath,ishdmi);
+                ALOGD("%s RKMODULE_GET_HDMI_MODE:%d",kV4l2DevicePath,ishdmi);
                 if (ishdmi)
                 {
                     mMipiHdmi = videofd;
-                    ALOGE("mMipiHdmi:%d",mMipiHdmi);
+                    ALOGD("MipiHdmi fd:%d",mMipiHdmi);
                     if (mMipiHdmi < 0)
                     {
                         return ret;
                     }
-                    // struct v4l2_capability cap;
-                    // ret = ioctl(videofd, VIDIOC_QUERYCAP, &cap);
-                    // if (ret < 0) {
-                    //     ALOGE("VIDIOC_QUERYCAP Failed, error: %s", strerror(errno));
-                    //     close(videofd);
-                    //     continue;
-                    // }
                     mV4l2Event->initialize(mMipiHdmi);
                 }
             }
@@ -85,23 +78,79 @@ int findMipiHdmi()
 }
 
 
-Return<void> Hdmi::foundHdmiDevice(const hidl_string& deviceId) {
+Return<void> Hdmi::foundHdmiDevice(const hidl_string& deviceId, const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback>& cb) {
 
-    ALOGE("@%s,deviceId:%s",__FUNCTION__,deviceId.c_str());
+    ALOGD("@%s,deviceId:%s",__FUNCTION__,deviceId.c_str());
     mDeviceId = deviceId.c_str();
+    mStatusCb = cb;
     return Void();
 }
 Return<void> Hdmi::getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) {
-    ALOGE("@%s,mDeviceId：%s",__FUNCTION__,mDeviceId.c_str());
+    ALOGD("@%s,mDeviceId：%s",__FUNCTION__,mDeviceId.c_str());
     _hidl_cb(mDeviceId);
+    return Void();
+}
+Return<void> Hdmi::getMipiStatus(Hdmi::getMipiStatus_cb _hidl_cb){
+    ALOGD("@%s",__FUNCTION__);
+    V1_0::HdmiStatus status;
+    struct v4l2_subdev_format aFormat;
+    int err = ioctl(mMipiHdmi, VIDIOC_SUBDEV_G_FMT, &aFormat);
+    if (err < 0) {
+        ALOGE("VIDIOC_SUBDEV_G_FMT failed: %s", strerror(errno));
+        _hidl_cb(status);
+        return Void();
+    }
+    ALOGD("VIDIOC_SUBDEV_G_FMT: pad: %d, which: %d, width: %d, "
+    "height: %d, format: 0x%x, field: %d, color space: %d",
+    aFormat.pad,
+    aFormat.which,
+    aFormat.format.width,
+    aFormat.format.height,
+    aFormat.format.code,
+    aFormat.format.field,
+    aFormat.format.colorspace);
+    status.width = aFormat.format.width;
+    status.height = aFormat.format.height;
+    struct v4l2_dv_timings timings;
+    err = ioctl(mMipiHdmi, VIDIOC_SUBDEV_QUERY_DV_TIMINGS, &timings);
+    if (err < 0) {
+        ALOGD("get VIDIOC_SUBDEV_QUERY_DV_TIMINGS failed ,%d(%s)", errno, strerror(errno));
+        _hidl_cb(status);
+        return Void();
+    }
+    const struct v4l2_bt_timings *bt =&timings.bt;
+    double tot_width, tot_height;
+    tot_height = bt->height +
+        bt->vfrontporch + bt->vsync + bt->vbackporch +
+        bt->il_vfrontporch + bt->il_vsync + bt->il_vbackporch;
+    tot_width = bt->width +
+        bt->hfrontporch + bt->hsync + bt->hbackporch;
+    ALOGD("%s:%dx%d, pixelclock:%lld Hz, %.2f fps", __func__,
+    timings.bt.width, timings.bt.height,
+    timings.bt.pixelclock,static_cast<double>(bt->pixelclock) /(tot_width * tot_height));
+    status.fps = round(static_cast<double>(bt->pixelclock) /(tot_width * tot_height));
+    status.status = 1;
+    _hidl_cb(status);
+    return Void();
+}
+
+Return<void> Hdmi::getHdmiRxStatus(Hdmi::getHdmiRxStatus_cb _hidl_cb){
+    ALOGD("@%s",__FUNCTION__);
+    V1_0::HdmiStatus status;
+    if (mStatusCb)
+    {
+        mStatusCb->getHdmiRxStatus(_hidl_cb);
+        return Void();
+    }
+    _hidl_cb(status);
     return Void();
 }
 // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
 Return<void> Hdmi::onStatusChange(uint32_t status) {
-    ALOGE("@%s",__FUNCTION__);
+    ALOGD("@%s",__FUNCTION__);
     if (mCb.get()!=nullptr)
     {
-        ALOGE("@%s,status:%d",__FUNCTION__,status);
+        ALOGD("@%s,status:%d",__FUNCTION__,status);
         if (status)
         {
             mCb->onConnect(mDeviceId);
@@ -113,13 +162,13 @@ Return<void> Hdmi::onStatusChange(uint32_t status) {
 }
 
 Return<void> Hdmi::registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
-    ALOGE("@%s",__FUNCTION__);
+    ALOGD("@%s",__FUNCTION__);
     mCb = cb;
     return Void();
 }
 
 Return<void> Hdmi::unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
-    ALOGE("@%s",__FUNCTION__);
+    ALOGD("@%s",__FUNCTION__);
     mCb = nullptr;
     return Void();
 }
@@ -145,7 +194,7 @@ V4L2EventCallBack Hdmi::eventCallback(void* sender,int event_type,struct v4l2_ev
             sp<V4L2DeviceEvent::FormartSize> format = eventThread->getFormat();
             if (format!=nullptr)
             {
-                ALOGE("getFormatWeight:%d,getFormatHeight:%d",format->getFormatWeight(),format->getFormatHeight());
+                ALOGD("getFormatWeight:%d,getFormatHeight:%d",format->getFormatWeight(),format->getFormatHeight());
                 if (mCb != nullptr)
                 {
                     mCb->onFormatChange("0",format->getFormatWeight(),format->getFormatHeight());
@@ -158,21 +207,21 @@ V4L2EventCallBack Hdmi::eventCallback(void* sender,int event_type,struct v4l2_ev
 }
 
 Hdmi::Hdmi(){
-    ALOGE("@%s.",__FUNCTION__);
+    ALOGD("@%s.",__FUNCTION__);
     mCb = new HdmiCallback();
     mV4l2Event = new V4L2DeviceEvent();
     mV4l2Event->RegisterEventvCallBack((V4L2EventCallBack)Hdmi::eventCallback);
     findMipiHdmi();
 }
 Hdmi::~Hdmi(){
-    ALOGE("@%s",__FUNCTION__);
+    ALOGD("@%s",__FUNCTION__);
     if (mV4l2Event)
         mV4l2Event->closePipe();
     if (mV4l2Event)
         mV4l2Event->closeEventThread();
 }
 V1_0::IHdmi* HIDL_FETCH_IHdmi(const char* /* name */) {
-    ALOGE("@%s",__FUNCTION__);
+    ALOGD("@%s",__FUNCTION__);
     return new Hdmi();
 }
 

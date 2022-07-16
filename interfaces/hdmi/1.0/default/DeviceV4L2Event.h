@@ -65,6 +65,7 @@ public:
          int mFormatHeight;
          bool mIsHdmiIn;
     };
+    sp<V4L2DeviceEvent::FormartSize> queryFormat();
     class V4L2EventThread : public android::Thread {
         public:
             V4L2EventThread(int fd,V4L2EventCallBack callback);
@@ -86,6 +87,7 @@ public:
 protected:
     int mFd;       /*!< file descriptor obtained when device is open */
     sp<V4L2EventThread> mV4L2EventThread;
+    sp<V4L2DeviceEvent::FormartSize> mCurformat;
     V4L2EventCallBack callback_;
 
 };
