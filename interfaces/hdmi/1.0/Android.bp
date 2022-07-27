@@ -8,6 +8,7 @@ hidl_interface {
         "types.hal",
         "IHdmi.hal",
         "IHdmiCallback.hal",
+        "IHdmiAudioCallback.hal",
         "IHdmiRxStatusCallback.hal",
     ],
     interfaces: [

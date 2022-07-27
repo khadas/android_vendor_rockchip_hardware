@@ -30,6 +30,9 @@ struct Hdmi : public V1_0::IHdmi {
     Return<void> onStatusChange(uint32_t status) override;
     Return<void> registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
     Return<void> unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) override;
+    Return<void> addAudioListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) override;
+    Return<void> removeAudioListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) override;
+    Return<void> onAudioChange(const ::rockchip::hardware::hdmi::V1_0::HdmiAudioStatus& status) override;
 
     static V4L2EventCallBack eventCallback(void* sender,int event_type,struct v4l2_event *event);
 };

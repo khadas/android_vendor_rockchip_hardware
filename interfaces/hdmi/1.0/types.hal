@@ -5,3 +5,8 @@ struct HdmiStatus {
     uint64_t height;
     double fps;
 };
+
+struct HdmiAudioStatus {
+    uint64_t status;
+    string deviceId;
+};
