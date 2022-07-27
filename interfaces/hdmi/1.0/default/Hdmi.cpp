@@ -7,6 +7,7 @@
 #include <linux/videodev2.h>
 #include <math.h>
 #include "HdmiCallback.h"
+#include "HdmiAudioCallback.h"
 
 
 #define BASE_VIDIOC_PRIVATE 192     /* 192-255 are private */
@@ -17,7 +18,9 @@
 namespace rockchip::hardware::hdmi::implementation {
 
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback> mCb = nullptr;
+sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback> mAudioCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback> mStatusCb = nullptr;
+
 
 hidl_string mDeviceId;
 
@@ -83,6 +86,32 @@ Return<void> Hdmi::foundHdmiDevice(const hidl_string& deviceId, const ::android:
     ALOGD("@%s,deviceId:%s",__FUNCTION__,deviceId.c_str());
     mDeviceId = deviceId.c_str();
     mStatusCb = cb;
+    return Void();
+}
+
+Return<void> Hdmi::addAudioListener(const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) {
+    ALOGD("@%s",__FUNCTION__);
+    mAudioCb = cb;
+    return Void();
+}
+Return<void> Hdmi::removeAudioListener(const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) 
+{
+    ALOGD("@%s",__FUNCTION__);
+    mAudioCb = nullptr;
+    return Void();
+}
+Return<void> Hdmi::onAudioChange(const ::rockchip::hardware::hdmi::V1_0::HdmiAudioStatus& status) {
+    ALOGD("@%s",__FUNCTION__);
+    if (mAudioCb.get()!=nullptr && strstr(status.deviceId.c_str(),mDeviceId.c_str()))
+    {
+        ALOGD("@%s,cameraId:%s status:%d",__FUNCTION__,status.deviceId.c_str(),status.status);
+        if (status.status)
+        {
+            mAudioCb->onConnect(status.deviceId);
+        }else{
+            mAudioCb->onDisconnect(status.deviceId);
+        }
+    }
     return Void();
 }
 Return<void> Hdmi::getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) {
@@ -170,6 +199,19 @@ Return<void> Hdmi::registerListener(const sp<::rockchip::hardware::hdmi::V1_0::I
 Return<void> Hdmi::unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
     mCb = nullptr;
+    if (mAudioCb.get()!=nullptr)
+    {
+        rockchip::hardware::hdmi::V1_0::HdmiAudioStatus status;
+        status.deviceId = mDeviceId;
+        status.status = 0;
+        ALOGD("@%s,cameraId:%s status:%d",__FUNCTION__,status.deviceId.c_str(),status.status);
+        if (status.status)
+        {
+            mAudioCb->onConnect(status.deviceId);
+        }else{
+            mAudioCb->onDisconnect(status.deviceId);
+        }
+    }
     return Void();
 }
 

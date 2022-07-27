@@ -2,6 +2,7 @@ package rockchip.hardware.hdmi@1.0;
 
 import IHdmiCallback;
 import IHdmiRxStatusCallback;
+import IHdmiAudioCallback;
 
 interface IHdmi
 {
@@ -18,4 +19,10 @@ interface IHdmi
 	registerListener(IHdmiCallback cb);
 
 	unregisterListener(IHdmiCallback cb);
+
+	addAudioListener(IHdmiAudioCallback cb);
+
+	removeAudioListener(IHdmiAudioCallback cb);
+
+	onAudioChange(HdmiAudioStatus status);
 };
