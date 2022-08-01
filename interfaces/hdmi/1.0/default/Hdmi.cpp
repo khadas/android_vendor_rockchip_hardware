@@ -20,6 +20,7 @@ namespace rockchip::hardware::hdmi::implementation {
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback> mCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback> mAudioCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback> mStatusCb = nullptr;
+sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper> mFrameWarpper = nullptr;
 
 
 hidl_string mDeviceId;
@@ -265,6 +266,30 @@ Hdmi::~Hdmi(){
 V1_0::IHdmi* HIDL_FETCH_IHdmi(const char* /* name */) {
     ALOGD("@%s",__FUNCTION__);
     return new Hdmi();
+}
+
+Return<void> Hdmi::setFrameDecorator(const sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper>& frameWarpper) {
+    ALOGD("@%s",__FUNCTION__);
+    mFrameWarpper = frameWarpper;
+    return Void();
+}
+
+Return<void> Hdmi::decoratorFrame(const ::rockchip::hardware::hdmi::V1_0::FrameInfo& frameInfo, decoratorFrame_cb _hidl_cb) {
+    ALOGV("@%s",__FUNCTION__);
+    rockchip::hardware::hdmi::V1_0::FrameInfo _frameInfo;
+    if (mFrameWarpper.get()!=nullptr)
+    {
+        V1_0::IFrameWarpper::onFrame_cb _onFrame_cb;
+        mFrameWarpper->onFrame(frameInfo,[&]( ::rockchip::hardware::hdmi::V1_0::FrameInfo frameInfo){
+            ALOGV("[%s] Receive wrapped frame(%d,%d)",__FUNCTION__,frameInfo.width,frameInfo.height);
+            _frameInfo = frameInfo;
+        });
+        ALOGV("[%s] Receive wrapped frame(%d,%d)",__FUNCTION__,_frameInfo.width,_frameInfo.height);
+        _hidl_cb(_frameInfo);
+        return Void();
+    }
+    _hidl_cb(frameInfo);
+    return Void();
 }
 
 }  // namespace rockchip::hardware::hdmi::implementation
