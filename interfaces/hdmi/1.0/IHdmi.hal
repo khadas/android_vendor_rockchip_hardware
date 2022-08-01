@@ -3,6 +3,7 @@ package rockchip.hardware.hdmi@1.0;
 import IHdmiCallback;
 import IHdmiRxStatusCallback;
 import IHdmiAudioCallback;
+import IFrameWarpper;
 
 interface IHdmi
 {
@@ -25,4 +26,8 @@ interface IHdmi
 	removeAudioListener(IHdmiAudioCallback cb);
 
 	onAudioChange(HdmiAudioStatus status);
+
+	setFrameDecorator(IFrameWarpper frameWarpper);
+
+	decoratorFrame(FrameInfo frameInfo) generates (FrameInfo status);
 };
