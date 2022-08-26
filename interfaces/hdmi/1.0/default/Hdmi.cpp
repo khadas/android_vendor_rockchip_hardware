@@ -8,7 +8,7 @@
 #include <math.h>
 #include "HdmiCallback.h"
 #include "HdmiAudioCallback.h"
-
+#include <condition_variable>
 
 #define BASE_VIDIOC_PRIVATE 192     /* 192-255 are private */
 #define RKMODULE_GET_HDMI_MODE       \
@@ -22,6 +22,7 @@ sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback> mAudioCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback> mStatusCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper> mFrameWarpper = nullptr;
 
+std::mutex mLock;
 
 hidl_string mDeviceId;
 
@@ -193,12 +194,15 @@ Return<void> Hdmi::onStatusChange(uint32_t status) {
 
 Return<void> Hdmi::registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
+std::unique_lock<std::mutex> lk(mLock);
     mCb = cb;
+lk.unlock();
     return Void();
 }
 
 Return<void> Hdmi::unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
+std::unique_lock<std::mutex> lk(mLock);
     mCb = nullptr;
     if (mAudioCb.get()!=nullptr)
     {
@@ -213,6 +217,7 @@ Return<void> Hdmi::unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0:
             mAudioCb->onDisconnect(status.deviceId);
         }
     }
+lk.unlock();
     return Void();
 }
 
@@ -270,12 +275,16 @@ V1_0::IHdmi* HIDL_FETCH_IHdmi(const char* /* name */) {
 
 Return<void> Hdmi::setFrameDecorator(const sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper>& frameWarpper) {
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLock);
     mFrameWarpper = frameWarpper;
+    lk.unlock();
     return Void();
 }
 
 Return<void> Hdmi::decoratorFrame(const ::rockchip::hardware::hdmi::V1_0::FrameInfo& frameInfo, decoratorFrame_cb _hidl_cb) {
     ALOGV("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLock);
+
     rockchip::hardware::hdmi::V1_0::FrameInfo _frameInfo;
     if (mFrameWarpper.get()!=nullptr)
     {
@@ -288,7 +297,9 @@ Return<void> Hdmi::decoratorFrame(const ::rockchip::hardware::hdmi::V1_0::FrameI
         _hidl_cb(_frameInfo);
         return Void();
     }
+    lk.unlock();
     _hidl_cb(frameInfo);
+
     return Void();
 }
 
