@@ -160,7 +160,15 @@ Return<void> Hdmi::getMipiStatus(Hdmi::getMipiStatus_cb _hidl_cb){
     timings.bt.width, timings.bt.height,
     timings.bt.pixelclock,static_cast<double>(bt->pixelclock) /(tot_width * tot_height));
     status.fps = round(static_cast<double>(bt->pixelclock) /(tot_width * tot_height));
-    status.status = 1;
+    struct v4l2_control control;
+    memset(&control, 0, sizeof(struct v4l2_control));
+    control.id = V4L2_CID_DV_RX_POWER_PRESENT;
+    err = ioctl(mMipiHdmi, VIDIOC_G_CTRL, &control);
+    if (err < 0) {
+        ALOGE("V4L2_CID_DV_RX_POWER_PRESENT failed ,%d(%s)", errno, strerror(errno));
+    }
+    ALOGD("VIDIOC_G_CTRL:%d",control.value);
+    status.status = control.value;
     _hidl_cb(status);
     return Void();
 }
