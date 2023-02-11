@@ -23,6 +23,9 @@ sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback> mStatusCb = nullptr;
 sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper> mFrameWarpper = nullptr;
 
 std::mutex mLock;
+std::mutex mLockAudio;
+std::mutex mLockStatusCb;
+std::mutex mLockFrameWarpper;
 
 hidl_string mDeviceId;
 
@@ -86,24 +89,31 @@ int findMipiHdmi()
 Return<void> Hdmi::foundHdmiDevice(const hidl_string& deviceId, const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiRxStatusCallback>& cb) {
 
     ALOGD("@%s,deviceId:%s",__FUNCTION__,deviceId.c_str());
+    std::unique_lock<std::mutex> lk(mLockStatusCb);
     mDeviceId = deviceId.c_str();
     mStatusCb = cb;
+    lk.unlock();
     return Void();
 }
 
 Return<void> Hdmi::addAudioListener(const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLockAudio);
     mAudioCb = cb;
+    lk.unlock();
     return Void();
 }
 Return<void> Hdmi::removeAudioListener(const ::android::sp<::rockchip::hardware::hdmi::V1_0::IHdmiAudioCallback>& cb) 
 {
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLockAudio);
     mAudioCb = nullptr;
+    lk.unlock();
     return Void();
 }
 Return<void> Hdmi::onAudioChange(const ::rockchip::hardware::hdmi::V1_0::HdmiAudioStatus& status) {
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLockAudio);
     if (mAudioCb.get()!=nullptr && strstr(status.deviceId.c_str(),mDeviceId.c_str()))
     {
         ALOGD("@%s,cameraId:%s status:%d",__FUNCTION__,status.deviceId.c_str(),status.status);
@@ -114,6 +124,7 @@ Return<void> Hdmi::onAudioChange(const ::rockchip::hardware::hdmi::V1_0::HdmiAud
             mAudioCb->onDisconnect(status.deviceId);
         }
     }
+    lk.unlock();
     return Void();
 }
 Return<void> Hdmi::getHdmiDeviceId(getHdmiDeviceId_cb _hidl_cb) {
@@ -175,18 +186,22 @@ Return<void> Hdmi::getMipiStatus(Hdmi::getMipiStatus_cb _hidl_cb){
 
 Return<void> Hdmi::getHdmiRxStatus(Hdmi::getHdmiRxStatus_cb _hidl_cb){
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLockStatusCb);
     V1_0::HdmiStatus status;
     if (mStatusCb)
     {
         mStatusCb->getHdmiRxStatus(_hidl_cb);
+        lk.unlock();
         return Void();
     }
     _hidl_cb(status);
+    lk.unlock();
     return Void();
 }
 // Methods from ::rockchip::hardware::hdmi::V1_0::IHdmi follow.
 Return<void> Hdmi::onStatusChange(uint32_t status) {
     ALOGD("@%s",__FUNCTION__);
+    std::unique_lock<std::mutex> lk(mLock);
     if (mCb.get()!=nullptr)
     {
         ALOGD("@%s,status:%d",__FUNCTION__,status);
@@ -197,40 +212,29 @@ Return<void> Hdmi::onStatusChange(uint32_t status) {
             mCb->onDisconnect(mDeviceId);
         }
     }
+    lk.unlock();
     return Void();
 }
 
 Return<void> Hdmi::registerListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
-std::unique_lock<std::mutex> lk(mLock);
+    std::unique_lock<std::mutex> lk(mLock);
     mCb = cb;
-lk.unlock();
+    lk.unlock();
     return Void();
 }
 
 Return<void> Hdmi::unregisterListener(const sp<::rockchip::hardware::hdmi::V1_0::IHdmiCallback>& cb) {
     ALOGD("@%s",__FUNCTION__);
-std::unique_lock<std::mutex> lk(mLock);
+    std::unique_lock<std::mutex> lk(mLock);
     mCb = nullptr;
-    if (mAudioCb.get()!=nullptr)
-    {
-        rockchip::hardware::hdmi::V1_0::HdmiAudioStatus status;
-        status.deviceId = mDeviceId;
-        status.status = 0;
-        ALOGD("@%s,cameraId:%s status:%d",__FUNCTION__,status.deviceId.c_str(),status.status);
-        if (status.status)
-        {
-            mAudioCb->onConnect(status.deviceId);
-        }else{
-            mAudioCb->onDisconnect(status.deviceId);
-        }
-    }
-lk.unlock();
+    lk.unlock();
     return Void();
 }
 
 V4L2EventCallBack Hdmi::eventCallback(void* sender,int event_type,struct v4l2_event *event){
     ALOGD("@%s,event_type:%d",__FUNCTION__,event_type);
+    std::unique_lock<std::mutex> lk(mLock);
     if (event_type == V4L2_EVENT_CTRL)
     {
         struct v4l2_event_ctrl* ctrl =(struct v4l2_event_ctrl*) &(event->u);
@@ -259,6 +263,7 @@ V4L2EventCallBack Hdmi::eventCallback(void* sender,int event_type,struct v4l2_ev
             }
         }
     }
+    lk.unlock();
     return 0;
 }
 
@@ -283,7 +288,7 @@ V1_0::IHdmi* HIDL_FETCH_IHdmi(const char* /* name */) {
 
 Return<void> Hdmi::setFrameDecorator(const sp<::rockchip::hardware::hdmi::V1_0::IFrameWarpper>& frameWarpper) {
     ALOGD("@%s",__FUNCTION__);
-    std::unique_lock<std::mutex> lk(mLock);
+    std::unique_lock<std::mutex> lk(mLockFrameWarpper);
     mFrameWarpper = frameWarpper;
     lk.unlock();
     return Void();
@@ -291,7 +296,7 @@ Return<void> Hdmi::setFrameDecorator(const sp<::rockchip::hardware::hdmi::V1_0::
 
 Return<void> Hdmi::decoratorFrame(const ::rockchip::hardware::hdmi::V1_0::FrameInfo& frameInfo, decoratorFrame_cb _hidl_cb) {
     ALOGV("@%s",__FUNCTION__);
-    std::unique_lock<std::mutex> lk(mLock);
+    std::unique_lock<std::mutex> lk(mLockFrameWarpper);
 
     rockchip::hardware::hdmi::V1_0::FrameInfo _frameInfo;
     if (mFrameWarpper.get()!=nullptr)
@@ -303,11 +308,11 @@ Return<void> Hdmi::decoratorFrame(const ::rockchip::hardware::hdmi::V1_0::FrameI
         });
         ALOGV("[%s] Receive wrapped frame(%d,%d)",__FUNCTION__,_frameInfo.width,_frameInfo.height);
         _hidl_cb(_frameInfo);
+        lk.unlock();
         return Void();
     }
-    lk.unlock();
     _hidl_cb(frameInfo);
-
+    lk.unlock();
     return Void();
 }
 
