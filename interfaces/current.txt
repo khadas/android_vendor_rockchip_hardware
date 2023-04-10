@@ -13,6 +13,6 @@ cc4d1a2ef6082b65a5ac31f7a06f50e06981cd7d39500be30d7720d134a18371 rockchip.hardwa
 f273ebf239d6d960221761a6e22b55f2feed23116917b80a20d610eb434817b7 rockchip.hardware.neuralnetworks@1.0::IRKNeuralnetworks
 
 # hash for TvInput
-97ee4b484880a56c106a2df1ee154fcb79c4549c060406db05f5c8603d020d6e rockchip.hardware.tv.input@1.0::ITvInput
+0f79dcf435b2d761c5c8c7126790f45dba70e3288bf3aa99dbd0ace16e32e78e rockchip.hardware.tv.input@1.0::ITvInput
 5b4bbb435f03d42be5895622ad0e3d50bfee519af28a9bc73b3aa15e7da7227a rockchip.hardware.tv.input@1.0::types
 14ebbae1281ca167e9150cc1bc004042c6b2a0896d0d342f6a14f72b6f981e31 rockchip.hardware.tv.input@1.0::ITvInputCallback
