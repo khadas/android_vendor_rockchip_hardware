@@ -384,6 +384,10 @@ int rk_vt_release_buffer(
         rk_vt_buffer_free(&buffer);
         return -errno;
     }
+    // close fd by driver already, can't close again
+    for (int i = 0; i < buffer->handle->numFds; i++) {
+        buffer->handle->data[i] = -1;
+    }
 
     rk_vt_buffer_free(&buffer);
 
